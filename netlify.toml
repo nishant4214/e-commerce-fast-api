@@ -1,4 +1,6 @@
 [build]
 functions = "functions"
-publish = "dist"
 command = "pip install -r requirements.txt"
+
+[functions]
+runtime = "python"
