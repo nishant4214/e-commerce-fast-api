@@ -1,4 +1,6 @@
 fastapi
-mangum
-supabase
 uvicorn
+sqlalchemy
+asyncpg
+pydantic
+supabase

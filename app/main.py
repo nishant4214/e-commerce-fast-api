@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, APIRouter
 from supabase import create_client, Client
 from pydantic import BaseModel, Field
-from mangum import Mangum
 
 SUPABASE_URL = "https://wplynhlsjjzczsgembup.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwbHluaGxzamp6Y3pzZ2VtYnVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTUwNzM5MSwiZXhwIjoyMDQ1MDgzMzkxfQ.UOg9HpjHXLIP7s__uKsNI6XJ0_seUQBGK7UhD8nzgZk"
@@ -111,4 +110,3 @@ async def update_product(request: UpdateProductRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-handler = Mangum(app)
