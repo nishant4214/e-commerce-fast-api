@@ -1,2 +1,4 @@
 [build]
-  functions = "netlify"
+functions = "functions"
+publish = "dist"
+command = "pip install -r requirements.txt"
