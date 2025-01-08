@@ -53,6 +53,9 @@ async def search_product_by_name(
     Filter products by Name.
     """
     try:
+        if not re.match(r"^[a-zA-Z0-9\s]+$", product_name):
+            raise ValueError("Product name should not contain special characters.")
+    
         response = supabase.table("products").select("*").ilike("name", f"%{product_name}%").execute()
 
         products = response.data
