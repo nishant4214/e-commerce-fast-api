@@ -19,6 +19,8 @@ async def get_products():
             raise HTTPException(status_code=404, detail="No products found")
 
         return products
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -37,6 +39,8 @@ async def get_product_by_id(
             raise HTTPException(status_code=404, detail="Product not found")
 
         return {"product": product}
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -45,7 +49,7 @@ async def search_product_by_name(
     product_name: str = Query(..., description="The string of the product name to fetch")
 ):
     """
-    Fetch a product by its ID.
+    Filter products by Name.
     """
     try:
         response = supabase.table("products").select("*").ilike("name", f"%{product_name}%").execute()
@@ -55,6 +59,8 @@ async def search_product_by_name(
             raise HTTPException(status_code=404, detail="No products found matching the given name.")
 
         return {"products": products}
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -106,6 +112,8 @@ async def add_product(request: AddProductRequest):
         }).execute()
 
         return {"message": "Product added successfully", "product": response.data}
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
