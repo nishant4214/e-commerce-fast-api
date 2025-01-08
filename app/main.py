@@ -30,7 +30,7 @@ async def get_product_by_id(
     Fetch a product by its ID.
     """
     try:
-        response = supabase.table("products").select("*").eq("id", product_id).execute()
+        response = supabase.table("products").select("*").eq("id", product_id).eq("isactive", True).execute()
 
         product = response.data
         if not product:
