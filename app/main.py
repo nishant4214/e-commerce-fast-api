@@ -39,6 +39,24 @@ async def get_product_by_id(
         return {"product": product}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/SearchProductByName")
+async def search_product_by_name(    
+    product_name: str = Query(..., description="The string of the product name to fetch")
+):
+    """
+    Fetch a product by its ID.
+    """
+    try:
+        response = supabase.table("products").select("*").ilike("name", f"%{product_name}%").execute()
+
+        products = response.data
+        if not products:
+            raise HTTPException(status_code=404, detail="No products found matching the given name.")
+
+        return {"products": products}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 class AddProductRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Name of the product")
