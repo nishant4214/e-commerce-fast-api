@@ -75,7 +75,7 @@ class UpdateProductRequest(BaseModel):
 @app.put("/UpdateProduct")
 async def update_product(request: UpdateProductRequest):
     try:
-        response = supabase.table("products").select("*").eq("name", request.name).eq("isactive", True).execute()
+        response = supabase.table("products").select("*").eq("name", request.name).eq("isactive", True).neq("id", request.product_id).execute()
 
         if response.data and len(response.data) > 0:
             raise HTTPException(status_code=400, detail="A product with the same name already exists.")
