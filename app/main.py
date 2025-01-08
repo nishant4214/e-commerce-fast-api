@@ -47,7 +47,7 @@ async def get_product_by_id(
 
 @app.get("/SearchProductByName")
 async def search_product_by_name(    
-    product_name: str = Query(..., description="The string of the product name to fetch")
+    product_name: str = Query(...,max_length=100,  description="The string of the product name to fetch")
 ):
     """
     Filter products by Name.
