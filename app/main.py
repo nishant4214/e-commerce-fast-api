@@ -30,7 +30,7 @@ async def get_product_by_id(
     Fetch a product by its ID.
     """
     try:
-        response = supabase.table("products").select("*").eq("id", product_id).eq("isactive", True).execute()
+        response = supabase.table("products").select("*").eq("id", product_id).execute()
 
         product = response.data
         if not product:
@@ -74,7 +74,7 @@ class AddProductRequest(BaseModel):
 @app.post("/AddProduct")
 async def add_product(request: AddProductRequest):
     try:
-        response = supabase.table("products").select("*").eq("name", request.name).eq("isactive", True).execute()
+        response = supabase.table("products").select("*").eq("name", request.name).execute()
 
         if response.data and len(response.data) > 0:
             raise HTTPException(status_code=400, detail="A product with the same name already exists.")
@@ -179,7 +179,6 @@ async def delete_product_by_id(request: DeleteProductById):
         product_response = supabase.table("products").select("*").eq("id", request.product_id).execute()
         if not product_response.data or len(product_response.data) == 0:
             raise HTTPException(status_code=404, detail="Product not found")
-
 
         update_response = supabase.table("products").update({"isactive": False}).eq("id", request.product_id).execute()
 
