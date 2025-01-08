@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException,Query
 from supabase import create_client, Client
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+import re
 
 SUPABASE_URL = "https://wplynhlsjjzczsgembup.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwbHluaGxzamp6Y3pzZ2VtYnVwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTUwNzM5MSwiZXhwIjoyMDQ1MDgzMzkxfQ.UOg9HpjHXLIP7s__uKsNI6XJ0_seUQBGK7UhD8nzgZk"
@@ -43,6 +44,30 @@ class AddProductRequest(BaseModel):
     image_url: str = Field(None, description="URL of the product image")
     category_id: int = Field(..., description="ID of the category the product belongs to")
 
+    @field_validator("name")
+    def validate_name(cls, value): 
+        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
+            raise ValueError("Name should not contain special characters.")
+        return value
+
+    @field_validator("description")
+    def validate_description(cls, value):
+        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
+            raise ValueError("Description should not contain special characters.")
+        return value
+
+    @field_validator("price")
+    def validate_price(cls, value):
+        if not isinstance(value, float):
+            raise ValueError("Price must be a float.")
+        return value
+
+    @field_validator("category_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Category ID must be a positive integer.")
+        return value
+
 @app.post("/AddProduct")
 async def add_product(request: AddProductRequest):
     try:
@@ -70,6 +95,30 @@ class UpdateProductRequest(BaseModel):
     description: str = None
     image_url: str = None
     category_id: int = None
+
+    @field_validator("name")
+    def validate_name(cls, value): 
+        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
+            raise ValueError("Name should not contain special characters.")
+        return value
+
+    @field_validator("description")
+    def validate_description(cls, value):
+        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
+            raise ValueError("Description should not contain special characters.")
+        return value
+
+    @field_validator("price")
+    def validate_price(cls, value):
+        if not isinstance(value, float):
+            raise ValueError("Price must be a float.")
+        return value
+
+    @field_validator("category_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Category ID must be a positive integer.")
+        return value
 
 @app.put("/UpdateProduct")
 async def update_product(request: UpdateProductRequest):
