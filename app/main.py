@@ -12,7 +12,7 @@ app = FastAPI()
 @app.get("/AllProducts")
 async def get_products():
     try:
-        response = supabase.table("products").select("*").execute()
+        response = supabase.table("products").select("*").eq("isactive", True).execute()
         products = response.data
         if not products:
             raise HTTPException(status_code=404, detail="No products found")
@@ -27,7 +27,7 @@ class ProductRequest(BaseModel):
 @app.post("/GetProductById")
 async def get_product_by_id(request: ProductRequest):
     try:
-        response = supabase.table("products").select("*").eq("id", request.product_id).execute()
+        response = supabase.table("products").select("*").eq("id", request.product_id).eq("isactive", True).execute()
         
         product = response.data
         if not product:
@@ -47,7 +47,7 @@ class AddProductRequest(BaseModel):
 @app.post("/AddProduct")
 async def add_product(request: AddProductRequest):
     try:
-        response = supabase.table("products").select("*").eq("name", request.name).execute()
+        response = supabase.table("products").select("*").eq("name", request.name).eq("isactive", True).execute()
 
         if response.data and len(response.data) > 0:
             raise HTTPException(status_code=400, detail="A product with the same name already exists.")
@@ -75,17 +75,15 @@ class UpdateProductRequest(BaseModel):
 @app.put("/UpdateProduct")
 async def update_product(request: UpdateProductRequest):
     try:
-        response = supabase.table("products").select("*").eq("name", request.name).execute()
+        response = supabase.table("products").select("*").eq("name", request.name).eq("isactive", True).execute()
 
         if response.data and len(response.data) > 0:
             raise HTTPException(status_code=400, detail="A product with the same name already exists.")
 
-        # Check if the product exists
         product_response = supabase.table("products").select("*").eq("id", request.product_id).execute()
         if not product_response.data or len(product_response.data) == 0:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        # Prepare fields to update dynamically
         update_fields = {}
         if request.name:
             update_fields["name"] = request.name
@@ -98,7 +96,6 @@ async def update_product(request: UpdateProductRequest):
         if request.category_id:
             update_fields["category_id"] = request.category_id
 
-        # Perform the update
         update_response = supabase.table("products").update(update_fields).eq("id", request.product_id).execute()
         return {
             "message": "Product updated successfully",
@@ -109,4 +106,41 @@ async def update_product(request: UpdateProductRequest):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/UpdateProduct")
+async def update_product(request: UpdateProductRequest):
+    try:
+        response = supabase.table("products").select("*").eq("name", request.name).execute()
+
+        if response.data and len(response.data) > 0:
+            raise HTTPException(status_code=400, detail="A product with the same name already exists.")
+
+        product_response = supabase.table("products").select("*").eq("id", request.product_id).execute()
+        if not product_response.data or len(product_response.data) == 0:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        update_fields = {}
+        if request.name:
+            update_fields["name"] = request.name
+        if request.price:
+            update_fields["price"] = request.price
+        if request.description:
+            update_fields["description"] = request.description
+        if request.image_url:
+            update_fields["image_url"] = request.image_url
+        if request.category_id:
+            update_fields["category_id"] = request.category_id
+
+        update_response = supabase.table("products").update(update_fields).eq("id", request.product_id).execute()
+        return {
+            "message": "Product updated successfully",
+            "product": update_response.data
+        }
+
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
