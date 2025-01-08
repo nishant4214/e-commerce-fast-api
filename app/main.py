@@ -203,7 +203,7 @@ class DeleteProductById(BaseModel):
             raise ValueError("Product ID must be a positive integer.")
         return value
 
-@app.put("/DeleteProductById")
+@app.delete("/DeleteProductById")
 async def delete_product_by_id(request: DeleteProductById):
     try:
         product_response = supabase.table("products").select("*").eq("id", request.product_id).execute()
@@ -221,5 +221,4 @@ async def delete_product_by_id(request: DeleteProductById):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
