@@ -23,7 +23,9 @@ async def get_products():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/GetProductById")
-async def get_product_by_id(product_id: int = Query(..., description="The ID of the product to fetch")):
+async def get_product_by_id(    
+    product_id: int = Query(..., gt=0, description="The positive integer ID of the product to fetch")
+):
     """
     Fetch a product by its ID.
     """
@@ -37,6 +39,7 @@ async def get_product_by_id(product_id: int = Query(..., description="The ID of 
         return {"product": product}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 class AddProductRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Name of the product")
     price: float = Field(..., gt=0, description="Price of the product")
