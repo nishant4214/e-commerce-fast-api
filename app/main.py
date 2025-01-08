@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, APIRouter
+from fastapi import FastAPI, HTTPException,Query
 from supabase import create_client, Client
 from pydantic import BaseModel, Field
 
@@ -24,11 +24,30 @@ async def get_products():
 class ProductRequest(BaseModel):
     product_id: int
 
-@app.post("/GetProductById")
-async def get_product_by_id(request: ProductRequest):
-    try:
-        response = supabase.table("products").select("*").eq("id", request.product_id).eq("isactive", True).execute()
+# @app.post("/GetProductById")
+# async def get_product_by_id(request: ProductRequest):
+#     try:
+#         response = supabase.table("products").select("*").eq("id", request.product_id).eq("isactive", True).execute()
         
+#         product = response.data
+#         if not product:
+#             raise HTTPException(status_code=404, detail="Product not found")
+
+#         return {"product": product}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/GetProductById")
+async def get_product_by_id(product_id: int = Query(..., description="The ID of the product to fetch")):
+    """
+    Fetch a product by its ID.
+    """
+    try:
+        # Fetch product by ID and check if it is active
+        response = supabase.table("products").select("*").eq("id", product_id).eq("isactive", True).execute()
+
+        # Extract product data
         product = response.data
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
@@ -36,7 +55,6 @@ async def get_product_by_id(request: ProductRequest):
         return {"product": product}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 class AddProductRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Name of the product")
     price: float = Field(..., gt=0, description="Price of the product")
