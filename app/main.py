@@ -107,34 +107,23 @@ async def update_product(request: UpdateProductRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class DeleteProductById(BaseModel):
+    product_id: int
 
-@app.put("/UpdateProduct")
-async def update_product(request: UpdateProductRequest):
+@app.put("/DeleteProductById")
+async def delete_product_by_id(request: DeleteProductById):
     try:
-        response = supabase.table("products").select("*").eq("name", request.name).execute()
-
-        if response.data and len(response.data) > 0:
-            raise HTTPException(status_code=400, detail="A product with the same name already exists.")
-
         product_response = supabase.table("products").select("*").eq("id", request.product_id).execute()
         if not product_response.data or len(product_response.data) == 0:
             raise HTTPException(status_code=404, detail="Product not found")
 
         update_fields = {}
         if request.name:
-            update_fields["name"] = request.name
-        if request.price:
-            update_fields["price"] = request.price
-        if request.description:
-            update_fields["description"] = request.description
-        if request.image_url:
-            update_fields["image_url"] = request.image_url
-        if request.category_id:
-            update_fields["category_id"] = request.category_id
+            update_fields["isactive"] = False
 
         update_response = supabase.table("products").update(update_fields).eq("id", request.product_id).execute()
         return {
-            "message": "Product updated successfully",
+            "message": "Product deleted successfully",
             "product": update_response.data
         }
 
