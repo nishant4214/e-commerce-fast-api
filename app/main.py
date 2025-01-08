@@ -96,6 +96,12 @@ class UpdateProductRequest(BaseModel):
     image_url: str = None
     category_id: int = None
 
+    @field_validator("product_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Product ID must be a positive integer.")
+        return value
+    
     @field_validator("name")
     def validate_name(cls, value): 
         if not re.match(r"^[a-zA-Z0-9\s]+$", value):
@@ -157,6 +163,12 @@ async def update_product(request: UpdateProductRequest):
 
 class DeleteProductById(BaseModel):
     product_id: int
+
+    @field_validator("product_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Product ID must be a positive integer.")
+        return value
 
 @app.put("/DeleteProductById")
 async def delete_product_by_id(request: DeleteProductById):
