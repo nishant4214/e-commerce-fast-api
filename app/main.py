@@ -118,7 +118,8 @@ async def delete_product_by_id(request: DeleteProductById):
             raise HTTPException(status_code=404, detail="Product not found")
 
 
-        update_response = supabase.table("products").update("isactive",False).eq("id", request.product_id).execute()
+        update_response = supabase.table("products").update({"isactive": False}).eq("id", request.product_id).execute()
+
         return {
             "message": "Product deleted successfully",
             "product": update_response.data
