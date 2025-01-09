@@ -53,7 +53,7 @@ async def get_product_by_id(
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        return {"product": product}
+        return product
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
@@ -98,7 +98,7 @@ async def search_product_by_name(
         if not products:
             raise HTTPException(status_code=404, detail="No products found matching the given name.")
 
-        return {"products": products}
+        return products
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
