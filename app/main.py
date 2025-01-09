@@ -68,13 +68,13 @@ async def get_product_by_category_id(
     Fetch a product by its category ID.
     """
     try:
-        response = supabase.table("categories").select("products(id, name, description, price, isactive)").eq("category_id", category_id).execute()
+        response = supabase.table("categories").select("products(id, name, description, price, isactive, category_id)").eq("category_id", category_id).execute()
 
         product = response.data
         if not product:
             raise HTTPException(status_code=404, detail="Products not found for given category id")
 
-        return {"products": product}
+        return product
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
