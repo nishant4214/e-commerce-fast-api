@@ -49,6 +49,7 @@ async def get_product_by_id(
 async def search_product_by_name(    
     product_name: str = Query(...,max_length=100,  description="The string of the product name to fetch")
 ):
+
     """
     Filter products by Name.
     """
@@ -56,7 +57,7 @@ async def search_product_by_name(
         if not re.match(r"^[a-zA-Z0-9\s]+$", product_name):
             raise HTTPException(status_code=400, detail="Product name should not contain special characters.")
     
-        response = supabase.table("products").select("id, name, description, price, categories(category_id, category_name)").ilike("name", f"%{product_name}%").execute()
+        response = supabase.table("products").select("id, name, description, price, isactive, categories(category_id, category_name)").ilike("name", f"%{product_name}%").execute()
 
         products = response.data
         if not products:
