@@ -68,7 +68,7 @@ async def get_product_by_category_id(
     Fetch a product by its category ID.
     """
     try:
-        response = supabase.table("categories").select("products(id, name, description, price, isactive, category_id)").eq("category_id", category_id).execute()
+        response = supabase.table("products").select("id, name, description, price, isactive, category_id").eq("category_id", category_id).eq("isactive", True).execute()
 
         product = response.data
         if not product:
