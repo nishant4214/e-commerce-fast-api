@@ -11,6 +11,83 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 app = FastAPI()
 
+   
+class AddProductRequest(BaseModel):
+    name: str = Field(..., max_length=100, description="Name of the product")
+    price: float = Field(..., gt=0, description="Price of the product")
+    description: str = Field(None, description="Description of the product")
+    image_url: str = Field(None, description="URL of the product image")
+    category_id: int = Field(..., description="ID of the category the product belongs to")
+
+    @field_validator("name")
+    def validate_name(cls, value): 
+        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
+            raise ValueError("Name should not contain special characters.")
+        return value
+
+    @field_validator("description")
+    def validate_description(cls, value):
+        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
+            raise ValueError("Description should not contain special characters.")
+        return value
+
+    @field_validator("price")
+    def validate_price(cls, value):
+        if not isinstance(value, float):
+            raise ValueError("Price must be a float.")
+        return value
+
+    @field_validator("category_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Category ID must be a positive integer.")
+        return value
+class UpdateProductRequest(BaseModel):
+    product_id: int
+    name: str = None
+    price: float = None
+    description: str = None
+    image_url: str = None
+    category_id: int = None
+
+    @field_validator("product_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Product ID must be a positive integer.")
+        return value
+    
+    @field_validator("name")
+    def validate_name(cls, value): 
+        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
+            raise ValueError("Name should not contain special characters.")
+        return value
+
+    @field_validator("description")
+    def validate_description(cls, value):
+        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
+            raise ValueError("Description should not contain special characters.")
+        return value
+
+    @field_validator("price")
+    def validate_price(cls, value):
+        if not isinstance(value, float):
+            raise ValueError("Price must be a float.")
+        return value
+
+    @field_validator("category_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Category ID must be a positive integer.")
+        return value
+class DeleteProductById(BaseModel):
+    product_id: int
+
+    @field_validator("product_id")
+    def validate_category_id(cls, value):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Product ID must be a positive integer.")
+        return value
+
 @app.get("/AllProducts")
 async def get_products():
     try:
@@ -103,37 +180,7 @@ async def search_product_by_name(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-class AddProductRequest(BaseModel):
-    name: str = Field(..., max_length=100, description="Name of the product")
-    price: float = Field(..., gt=0, description="Price of the product")
-    description: str = Field(None, description="Description of the product")
-    image_url: str = Field(None, description="URL of the product image")
-    category_id: int = Field(..., description="ID of the category the product belongs to")
-
-    @field_validator("name")
-    def validate_name(cls, value): 
-        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
-            raise ValueError("Name should not contain special characters.")
-        return value
-
-    @field_validator("description")
-    def validate_description(cls, value):
-        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
-            raise ValueError("Description should not contain special characters.")
-        return value
-
-    @field_validator("price")
-    def validate_price(cls, value):
-        if not isinstance(value, float):
-            raise ValueError("Price must be a float.")
-        return value
-
-    @field_validator("category_id")
-    def validate_category_id(cls, value):
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError("Category ID must be a positive integer.")
-        return value
+ 
 
 @app.post("/AddProduct")
 async def add_product(request: AddProductRequest):
@@ -156,44 +203,7 @@ async def add_product(request: AddProductRequest):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-class UpdateProductRequest(BaseModel):
-    product_id: int
-    name: str = None
-    price: float = None
-    description: str = None
-    image_url: str = None
-    category_id: int = None
-
-    @field_validator("product_id")
-    def validate_category_id(cls, value):
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError("Product ID must be a positive integer.")
-        return value
-    
-    @field_validator("name")
-    def validate_name(cls, value): 
-        if not re.match(r"^[a-zA-Z0-9\s]+$", value):
-            raise ValueError("Name should not contain special characters.")
-        return value
-
-    @field_validator("description")
-    def validate_description(cls, value):
-        if value and not re.match(r"^[a-zA-Z0-9\s,.!?-]*$", value):
-            raise ValueError("Description should not contain special characters.")
-        return value
-
-    @field_validator("price")
-    def validate_price(cls, value):
-        if not isinstance(value, float):
-            raise ValueError("Price must be a float.")
-        return value
-
-    @field_validator("category_id")
-    def validate_category_id(cls, value):
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError("Category ID must be a positive integer.")
-        return value
+   
 
 @app.put("/UpdateProduct")
 async def update_product(request: UpdateProductRequest):
@@ -230,14 +240,6 @@ async def update_product(request: UpdateProductRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class DeleteProductById(BaseModel):
-    product_id: int
-
-    @field_validator("product_id")
-    def validate_category_id(cls, value):
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError("Product ID must be a positive integer.")
-        return value
 
 @app.delete("/DeleteProductById")
 async def delete_product_by_id(request: DeleteProductById):
