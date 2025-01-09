@@ -14,7 +14,7 @@ app = FastAPI()
 @app.get("/AllProducts")
 async def get_products():
     try:
-        response = supabase.table("products").select("id, name, description, price, categories(category_id, category_name)").eq("isactive", True).execute()
+        response = supabase.table("products").select("id, name, description, price, isactive, categories(category_id, category_name)").eq("isactive", True).execute()
         products = response.data
         if not products:
             raise HTTPException(status_code=404, detail="No products found")
@@ -33,7 +33,7 @@ async def get_product_by_id(
     Fetch a product by its ID.
     """
     try:
-        response = supabase.table("products").select("id, name, description, price, image_url, categories(category_id, category_name)").eq("id", product_id).eq("isactive", True).execute()
+        response = supabase.table("products").select("id, name, description, price, image_url, isactive, categories(category_id, category_name)").eq("id", product_id).eq("isactive", True).execute()
 
         product = response.data
         if not product:
@@ -162,7 +162,7 @@ class UpdateProductRequest(BaseModel):
 @app.put("/UpdateProduct")
 async def update_product(request: UpdateProductRequest):
     try:
-        response = supabase.table("products").select("name").eq("name", request.name).neq("id", request.product_id).execute()
+        response = supabase.table("products").select("id, name").eq("name", request.name).neq("id", request.product_id).execute()
 
         if response.data and len(response.data) > 0:
             raise HTTPException(status_code=400, detail="A product with the same name already exists.")
