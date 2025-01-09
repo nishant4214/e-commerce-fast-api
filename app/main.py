@@ -14,7 +14,7 @@ app = FastAPI()
 @app.get("/AllProducts")
 async def get_products():
     try:
-        response = supabase.table("products").select("*, categories(category_name) as category").eq("isactive", True).execute()
+        response = supabase.table("products").select("*, categories(category_name)").eq("isactive", True).execute()
         products = response.data
         if not products:
             raise HTTPException(status_code=404, detail="No products found")
