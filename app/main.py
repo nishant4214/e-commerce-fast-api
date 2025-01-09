@@ -25,6 +25,20 @@ async def get_products():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/AllProductCategories")
+async def get_all_product_categories():
+    try:
+        response = supabase.table("categories").select("category_id, category_name, is_prescription_required, is_otc, is_medicine, is_medical_device").execute()
+        categories = response.data
+        if not categories:
+            raise HTTPException(status_code=404, detail="No category found")
+
+        return categories
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/GetProductById")
 async def get_product_by_id(    
     product_id: int = Query(..., gt=0, description="The positive integer ID of the product to fetch")
@@ -40,6 +54,27 @@ async def get_product_by_id(
             raise HTTPException(status_code=404, detail="Product not found")
 
         return {"product": product}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/GetProductByCategoryId")
+async def get_product_by_category_id(    
+    category_id: int = Query(..., gt=0, description="The positive integer ID of the category to fetch products")
+):
+    """
+    Fetch a product by its category ID.
+    """
+    try:
+        response = supabase.table("categories").select("products(id, name, description, price, isactive)").eq("category_id", category_id).execute()
+
+        product = response.data
+        if not product:
+            raise HTTPException(status_code=404, detail="Products not found for given category id")
+
+        return {"products": product}
     except HTTPException as http_exc:
         raise http_exc
     except Exception as e:
