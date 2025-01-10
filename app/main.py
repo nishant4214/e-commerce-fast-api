@@ -15,9 +15,9 @@ app = FastAPI()
 class AddProductRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Name of the product")
     price: float = Field(..., gt=0, description="Price of the product")
-    description: str = Field(None, description="Description of the product")
+    description: str = Field(None, max_length=500,  description="Description of the product")
     image_url: str = Field(None, description="URL of the product image")
-    category_id: int = Field(..., description="ID of the category the product belongs to")
+    category_id: int = Field(..., gt=0, description="ID of the category the product belongs to")
 
     @field_validator("name")
     def validate_name(cls, value): 
