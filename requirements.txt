@@ -4,5 +4,3 @@ sqlalchemy
 asyncpg
 pydantic
 supabase
-python-multipart
-os
