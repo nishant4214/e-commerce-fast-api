@@ -43,6 +43,8 @@ This repository contains a FastAPI-based backend API for managing products and c
 
 3. **Install dependencies**:
    ```bash
+   pip install python-multipart
+   pip install os
    pip install -r requirements.txt
    ```
 
