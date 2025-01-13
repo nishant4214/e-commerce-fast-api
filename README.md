@@ -31,7 +31,7 @@ This repository contains a FastAPI-based backend API for managing products and c
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/nishant4214/e-commerce-fast-api.git
-   cd your-repo-name
+   cd e-commerce-fast-api
    ```
 
 2. **Set up a Python environment**:
