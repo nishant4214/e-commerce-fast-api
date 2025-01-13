@@ -30,7 +30,7 @@ This repository contains a FastAPI-based backend API for managing products and c
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo-url.git
+   git clone https://github.com/nishant4214/e-commerce-fast-api.git
    cd your-repo-name
    ```
 
