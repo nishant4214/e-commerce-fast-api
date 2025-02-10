@@ -4,3 +4,6 @@ sqlalchemy
 asyncpg
 pydantic
 supabase
+fastapi-jwt-auth
+passlib
+bcrypt
