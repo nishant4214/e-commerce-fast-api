@@ -3,7 +3,7 @@ from supabase import create_client, Client
 from pydantic import BaseModel, Field, field_validator
 import re
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Union
 
-load_dotenv()
+# load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
