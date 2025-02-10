@@ -7,3 +7,4 @@ supabase
 fastapi-jwt-auth
 passlib
 bcrypt
+pyjwt
