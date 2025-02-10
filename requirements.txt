@@ -8,3 +8,4 @@ fastapi-jwt-auth
 passlib
 bcrypt
 pyjwt
+python-multipart
