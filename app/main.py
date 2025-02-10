@@ -1,17 +1,128 @@
-from fastapi import FastAPI, HTTPException,Query
+from fastapi import FastAPI, HTTPException,Query, Depends,status
 from supabase import create_client, Client
 from pydantic import BaseModel, Field, field_validator
 import re
 import os
+from dotenv import load_dotenv
+import jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jwt.exceptions import InvalidTokenError
+from passlib.context import CryptContext
+from datetime import datetime, timedelta, timezone
+from typing import Annotated, Union
+
+load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+pwd_context = CryptContext(schemes=["bcrypt"], bcrypt__rounds=10)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+class TokenData(BaseModel):
+    mobile_no: Union[str, None] = None
 
+class User(BaseModel):
+    id: int
+    mobile_no: str
+    full_name: Union[str, None] = None
+    isactive: bool
+
+class UserInDB(User):
+    password: str
+
+def verify_password(plain_password, hashed_password):
+
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+async def get_user(mobile_no: str):
+    """Fetch user from Supabase users table"""
+
+    response = supabase.table("users").select("id,mobile_no,full_name,password,isactive").eq("mobile_no", mobile_no).execute()
+
+
+    if response.data and len(response.data) > 0:
+        user_data = response.data[0]
+        return UserInDB(
+            id=user_data["id"],
+            mobile_no=user_data["mobile_no"],
+            full_name=user_data["full_name"],
+            password=user_data["password"],  # Hashed password
+            isactive=user_data["isactive"],
+
+        )
+
+    print("User not found.")
+    return None
+
+async def authenticate_user(mobile_no: str, password: str):
+    """Authenticate user by verifying password"""
+    user = await get_user(mobile_no)
+    if not user or not verify_password(password, user.password):  
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=30))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Retrieve current authenticated user"""
    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        mobile_no: str = payload.get("sub")
+        if mobile_no is None:
+            raise credentials_exception
+        user = await get_user(mobile_no)
+        if user is None:
+            raise credentials_exception
+    except InvalidTokenError:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
+    if not current_user.isactive:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Authenticate user and return JWT token"""
+    user = await authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect mobile no or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.mobile_no})
+    return Token(access_token=access_token, token_type="bearer")
+
+
+@app.get("/users/me/", response_model=User)
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    return current_user
+
 class AddProductRequest(BaseModel):
     name: str = Field(..., max_length=100, description="Name of the product")
     price: float = Field(..., gt=0, description="Price of the product")
@@ -88,7 +199,7 @@ class DeleteProductById(BaseModel):
             raise ValueError("Product ID must be a positive integer.")
         return value
 
-@app.get("/AllProducts")
+@app.get("/AllProducts", dependencies=[Depends(get_current_user)])
 async def get_products():
     try:
         response = supabase.table("products").select("id, name, description, price, isactive, categories(category_id, category_name)").eq("isactive", True).execute()
@@ -102,7 +213,7 @@ async def get_products():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/AllProductCategories")
+@app.get("/AllProductCategories", dependencies=[Depends(get_current_user)])
 async def get_all_product_categories():
     try:
         response = supabase.table("categories").select("category_id, category_name, is_prescription_required, is_otc, is_medicine, is_medical_device").execute()
@@ -115,8 +226,10 @@ async def get_all_product_categories():
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
 
-@app.get("/GetProductById")
+@app.get("/GetProductById", dependencies=[Depends(get_current_user)])
 async def get_product_by_id(    
     product_id: int = Query(..., gt=0, description="The positive integer ID of the product to fetch")
 ):
@@ -135,9 +248,11 @@ async def get_product_by_id(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
 
 
-@app.get("/GetProductByCategoryId")
+@app.get("/GetProductByCategoryId", dependencies=[Depends(get_current_user)])
 async def get_product_by_category_id(    
     category_id: int = Query(..., gt=0, description="The positive integer ID of the category to fetch products")
 ):
@@ -156,8 +271,10 @@ async def get_product_by_category_id(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
 
-@app.get("/SearchProductByName")
+@app.get("/SearchProductByName", dependencies=[Depends(get_current_user)])
 async def search_product_by_name(    
     product_name: str = Query(...,max_length=100,  description="The string of the product name to fetch")
 ):
@@ -180,9 +297,11 @@ async def search_product_by_name(
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
  
 
-@app.post("/AddProduct")
+@app.post("/AddProduct", dependencies=[Depends(get_current_user)])
 async def add_product(request: AddProductRequest):
     try:
         response = supabase.table("products").select("name").eq("name", request.name).execute()
@@ -203,9 +322,11 @@ async def add_product(request: AddProductRequest):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
    
 
-@app.put("/UpdateProduct")
+@app.put("/UpdateProduct", dependencies=[Depends(get_current_user)])
 async def update_product(request: UpdateProductRequest):
     try:
         response = supabase.table("products").select("id, name").eq("name", request.name).neq("id", request.product_id).execute()
@@ -239,9 +360,11 @@ async def update_product(request: UpdateProductRequest):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    except InvalidTokenError:
+        raise credentials_exception
 
 
-@app.delete("/DeleteProductById")
+@app.delete("/DeleteProductById", dependencies=[Depends(get_current_user)])
 async def delete_product_by_id(request: DeleteProductById):
     try:
         product_response = supabase.table("products").select("id").eq("id", request.product_id).execute()
@@ -259,4 +382,5 @@ async def delete_product_by_id(request: DeleteProductById):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    except InvalidTokenError:
+        raise credentials_exception
